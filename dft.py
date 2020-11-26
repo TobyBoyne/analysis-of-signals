@@ -22,7 +22,7 @@ if __name__ == '__main__':
 	total_time = 20.
 	T = total_time / N
 
-	x = np.linspace(0., N*T, N)
+	x = np.linspace(0., total_time, N)
 	xf = np.linspace(0., 1./(2.*T), N//2)
 
 	sig = np.sin(1.5 * 2.*np.pi*x) + 2*np.sin(3. * 2.*np.pi*x)
