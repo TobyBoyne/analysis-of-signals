@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def rectangular(n):
-	return 1
+	return np.ones_like(n)
 
 def triangular(n):
 	return 1 - np.abs((2*n - len(n)) / (len(n)+1))
@@ -26,8 +26,11 @@ if __name__ == '__main__':
 	n = np.arange(1, 100)
 	window = hann(n)
 	window2 = triangular(n)
-	print(window2)
 
-	plt.plot(window)
-	plt.plot(window2)
+	fig, axes = plt.subplots(2, 2)
+
+	for ax, window_func in zip(axes.flat, (rectangular, triangular, hann, flat_top)):
+		ax.plot(window_func(n))
+		ax.grid()
+
 	plt.show()
