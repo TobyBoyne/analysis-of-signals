@@ -34,10 +34,11 @@ class GroupAnimator(FuncAnimation):
 
 class Animator:
 	"""Object stores all signals to be animated
+	Contains time domain and frequency domain plots
 	Main drawing stored in self.line
 	init() is called at the beginning of each loop
 	animate() is called at each frame"""
-	def __init__(self, axes, window_func, signal_func, ts, fs):
+	def __init__(self, axes, window_func, signal_func, ts, fs, **kwargs):
 		self.ax_time, self.ax_freq = axes
 
 		self.ax_time.set_xlim(0, np.max(ts))
@@ -48,7 +49,7 @@ class Animator:
 		self.ax_freq.set_ylim(0, 1.5)
 		self.ax_freq.set_xlabel('frequency [Hz]')
 
-		self.window = window_func(ts)
+		self.window = window_func(ts) if window_func is not None else rectangular(ts)
 		self.signal = signal_func
 
 		self.line_time, = self.ax_time.plot(ts, np.zeros_like(ts), lw=3)
@@ -60,9 +61,27 @@ class Animator:
 		self.y_freq = []
 
 		# plot window function on time axis
-		self.ax_time.plot(ts, self.window)
+		if kwargs.get('plot_window', False):
+			self.ax_time.plot(ts, self.window)
 
 	def evaluate(self, k):
+		"""Base animator class has no evalution method"""
+		return [self.line_time, self.line_freq]
+
+
+	def init_func(self):
+		return self.evaluate(0)
+
+	def animate(self, i):
+		return self.evaluate(i)
+
+
+class WindowFuncAnimator(Animator):
+	def __init__(self, axes, window_func, signal_func, ts, fs, **kwargs):
+		super().__init__(axes, window_func, signal_func, ts, fs, **kwargs)
+
+	def evaluate(self, i):
+		k = (i + 10) * (INTERVAL / 1000) / 4
 		N = len(self.ts)
 
 		self.y_time = self.signal(k) * self.window
@@ -75,15 +94,16 @@ class Animator:
 		return [self.line_time, self.line_freq]
 
 
-	def init_func(self):
-		return self.evaluate(0)
+class SampleRateAnimator(Animator):
+	def __init__(self, axes, signal_func, ts, fs, **kwargs):
+		super().__init__(axes, None, signal_func, ts, fs, **kwargs)
 
-	def animate(self, i):
-		k = i * (INTERVAL / 1000)
-		return self.evaluate(k)
+	def evaluate(self, k):
+		pass
+
 
 if __name__ == '__main__':
-	from window.window_funcs import triangular
+	from window.window_funcs import *
 	fig, axes = plt.subplots(nrows=2)
 
 	N = 1000
@@ -94,7 +114,7 @@ if __name__ == '__main__':
 	fs = np.linspace(0., 1. / (2. * T), N // 2)
 
 
-	window_func = triangular(ts)
+	window_func = flat_top
 
 	signal = lambda k: np.sin(2*np.pi*k*ts / 4)
 	anim = Animator(axes, window_func, signal, ts, fs)
