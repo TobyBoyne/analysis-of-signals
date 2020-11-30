@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
+from window.window_funcs import rectangular
+
 INTERVAL = 30
 
 class GroupAnimator(FuncAnimation):
@@ -48,7 +50,13 @@ class Animator:
 		self.window = window_func(ts) if window_func is not None else rectangular(ts)
 		self.signal = signal_func
 
-		self.line_time, = self.ax_time.plot(ts, np.zeros_like(ts), lw=3)
+
+		if kwargs.get('plot_markers', False):
+			self.line_time, = self.ax_time.plot(ts, np.zeros_like(ts), lw=3,
+												marker='x', markersize=10, markeredgewidth=3, markeredgecolor='tab:cyan')
+		else:
+			self.line_time, = self.ax_time.plot(ts, np.zeros_like(ts), lw=3)
+
 		if kwargs.get('log_amplitude', False):
 			self.line_freq, = self.ax_freq.semilogy(fs, np.zeros_like(fs), lw=3)
 		else:
@@ -75,42 +83,9 @@ class Animator:
 		return self.evaluate(i)
 
 
-
-class SampleRateAnimator(Animator):
-	def __init__(self, axes, signal_func, t_max, fs, **kwargs):
-		ts = np.linspace(0, t_max, 1)
-		super().__init__(axes, None, signal_func, ts, fs, **kwargs)
-		self.t_max = t_max
-
-		self.ax_time.set_xlim(0, t_max)
-		self.ax_time.set_ylim(-1, 1)
-
-		self.ax_freq.set_xlim(0, 25)
-		self.ax_freq.set_ylim(0, 1.5)
-
-
-	def evaluate(self, i):
-		"""Signal is to be evaluated for ts"""
-		k = (i + 10) // 2
-		self.ts = np.linspace(0, self.t_max, int(k))
-		N = len(self.ts)
-		T = self.t_max / N
-		self.fs = np.linspace(0., 1. / (2. * T), N // 2)
-
-
-		self.y_time = self.signal(self.ts)
-		self.line_time.set_data(self.ts, self.y_time)
-
-		fft = np.fft.fft(self.y_time)
-		self.y_freq = 2. / N * np.abs(fft[0:N // 2])
-		self.line_freq.set_data(self.fs, self.y_freq)
-
-		return [self.line_time, self.line_freq]
-
-
-
 if __name__ == '__main__':
 	from window.window_funcs import *
+	from sampling.sample_rate_plot import SampleRateAnimator
 	fig, axes = plt.subplots(nrows=2)
 
 	N = 1000
