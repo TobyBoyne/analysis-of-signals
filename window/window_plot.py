@@ -18,7 +18,7 @@ def real_signal(data):
 class WindowFuncAnimator(Animator):
 	def __init__(self, axes, window_func, signal_func, ts, fs, **kwargs):
 		super().__init__(axes, window_func, signal_func, ts, fs, **kwargs)
-		self.ax_time.plot(ts, self.window)
+		self.window_line, = self.ax_time.plot(ts, self.window)
 
 		self.ax_time.set_xlim(0, np.max(ts))
 		self.ax_time.set_ylim(-1, 1)
@@ -29,8 +29,16 @@ class WindowFuncAnimator(Animator):
 		else:
 			self.ax_freq.set_ylim(0, 1.5)
 
+		self.real_freq_line = self.ax_freq.vlines(1, 1e-5, 1, color='tab:green', lw=3, linestyle='--')
+
+
+	def update_real_frequency(self, k):
+		line_data = np.array([[k, 1e-5], [k, 1.]])
+		self.real_freq_line.set_segments([line_data])
+		return self.real_freq_line
+
 	def evaluate(self, i):
-		k = (i + 10) * (INTERVAL / 1000) / 4
+		k = (i + 10) * (INTERVAL / 1000) / 8
 		N = len(self.ts)
 
 		self.y_time = self.signal(k) * self.window
@@ -40,7 +48,9 @@ class WindowFuncAnimator(Animator):
 		self.y_freq = 2. / N * np.abs(fft[0:N // 2])
 		self.line_freq.set_ydata(self.y_freq)
 
-		return [self.line_time, self.line_freq]
+		self.update_real_frequency(k)
+
+		return [self.line_time, self.line_freq, self.real_freq_line]
 
 if __name__ == '__main__':
 	N = 1000
@@ -64,7 +74,10 @@ if __name__ == '__main__':
 						plot_window=True, log_amplitude=True)
 		anims.append(anim)
 
-	grp = GroupAnimator(fig, anims, 5)
-	fig.legend(('Signal', 'Window Function'))
+	grp = GroupAnimator(fig, anims, 10)
+
+	handles = (anim.line_freq, anim.window_line, anim.real_freq_line)
+	fig.legend(handles, ('Signal', 'Window Function', 'Real frequency'))
+	# grp.save('window_sine_sweep.gif', 'ffmpeg')
 	grp.save('window_log_sweep.gif', 'ffmpeg')
 	plt.show()
