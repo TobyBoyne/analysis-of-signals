@@ -64,7 +64,7 @@ class SampleTimeAnimator(Animator):
 
 	def evaluate(self, i):
 		"""Signal is to be evaluated for ts"""
-		k = int((i / self.frames) * (len(ts) - self.window_size))
+		k = int((i / self.frames) * (len(self.ts) - self.window_size))
 
 		window = self.window_func(k)
 
@@ -76,6 +76,7 @@ class SampleTimeAnimator(Animator):
 		self.sampled_line.set_data(self.ts[k:self.window_size+k], sample)
 
 		fft = np.fft.fft(self.y_time)
+		N = len(self.ts)
 		self.y_freq = 2. / N * np.abs(fft[0:N // 2])
 		self.line_freq.set_ydata(self.y_freq)
 
@@ -88,7 +89,7 @@ if __name__ == '__main__':
 	total_time = 10.
 	T = total_time / N
 
-	ANIM_TIME = 5
+	ANIM_TIME = 10
 	total_frames = int((ANIM_TIME * 1000) // INTERVAL)
 
 	ts = np.linspace(0., total_time, N)

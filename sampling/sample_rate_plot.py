@@ -3,6 +3,18 @@ import matplotlib.pyplot as plt
 
 from animate import GroupAnimator, Animator, INTERVAL
 
+def scale_speed(i):
+	return i/20 + 1
+	f = (np.exp(i / 60)) / 2 + 1
+	return f
+	# if f < 8:
+	# 	return f
+	# elif 8 < f < 10:
+	# 	print(i)
+	# 	return 8.5
+	# else:
+	# 	return (np.exp((i-10) / 40)) / 2
+
 
 class SampleRateAnimator(Animator):
 	def __init__(self, axes, signal_func, t_max, fs, **kwargs):
@@ -17,7 +29,8 @@ class SampleRateAnimator(Animator):
 		self.ax_freq.set_ylim(0, 1.5)
 
 		# plot for large sample rate
-		ts_final = np.linspace(0, t_max, 1000)
+		k=100
+		ts_final = np.arange(0, self.t_max + k, 1 / k)
 		N = len(ts_final)
 		T = self.t_max / N
 		fs_final = np.linspace(0., 1. / (2. * T), N // 2)
@@ -27,16 +40,21 @@ class SampleRateAnimator(Animator):
 		y_freq_final = 2. / N * np.abs(fft_final[0:N // 2])
 
 		self.ax_time.plot(ts_final, ys_final, linestyle='--')
-		self.ax_freq.plot(fs_final, y_freq_final, linestyle='--')
+		self.ax_freq.vlines(4, 0, 1, color='orange', linestyle='--', lw=3)
 
 
 	def evaluate(self, i):
 		"""Signal is to be evaluated for ts"""
-		k = int(np.exp(i / 40) + 1)
-		self.ax_time.set_title(f'Number of sampled points = {k}')
-		self.ts = np.linspace(0, self.t_max, int(k))
+
+		k = scale_speed(i)
+		# k = int( (np.exp(i / 40) + 1) )
+
+
+		self.ax_time.set_title(f'Sampling rate = {k:.1f} Hz', fontsize=28)
+		self.ts = np.arange(0, self.t_max + k, 1 / k)
+		# self.ts = np.linspace(0, self.t_max, int(k), endpoint=True)
 		N = len(self.ts)
-		T = self.t_max / N
+		T = np.max(self.ts) / N
 		self.fs = np.linspace(0., 1. / (2. * T), N // 2)
 
 
@@ -61,10 +79,10 @@ if __name__ == '__main__':
 	fs = np.linspace(0., 1. / (2. * T), N // 2)
 
 
-	signal = lambda t: np.sin(2 * np.pi * t * 4.10)
+	signal = lambda t: np.sin(2 * np.pi * t * 4.)
 	anim = SampleRateAnimator(axes, signal, 2, fs,
 							  plot_markers=True)
-	grp = GroupAnimator(fig, [anim], 7)
+	grp = GroupAnimator(fig, [anim], 10)
 	# grp.save('rate_sine_sweep.gif', writer='ffmpeg')
-	# grp.save('rate_4100mHz.gif', writer='ffmpeg')
+	grp.save('rate_freq_sweep.gif', writer='ffmpeg')
 	plt.show()

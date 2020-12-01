@@ -117,7 +117,7 @@ if __name__ == '__main__':
 	rate = 500  # Hz
 	signal = lambda: signal_data[:20000]
 
-	ANIM_TIME = 5
+	ANIM_TIME = 10
 	total_frames = int((ANIM_TIME * 1000) // INTERVAL)
 
 	N = len(signal())
@@ -160,6 +160,6 @@ if __name__ == '__main__':
 	fig.legend(handles, ('Signal', 'Sampled region'))
 
 	grp = GroupAnimator(fig, anims, ANIM_TIME)
-	# grp.save('earthquake_window.gif', writer='ffmpeg')
+	grp.save('earthquake_window.gif', writer='ffmpeg')
 
 	plt.show()
